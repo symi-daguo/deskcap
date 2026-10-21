@@ -136,15 +136,18 @@ jobs:
             echo "未配置 Apple 凭据 —— 跳过公证（产物为 ad-hoc 签名）"
             exit 0
           fi
-          APP="$RUNNER_TEMP/DeskCap.app"
-          rm -rf "$APP"
-          ditto src-tauri/target/release/bundle/macos/DeskCap.app "$APP"
-          ditto -c -k --keepParent "$APP" "$RUNNER_TEMP/DeskCap.zip"
-          xcrun notarytool submit "$RUNNER_TEMP/DeskCap.zip" \
+          # 注意：Tauri 打 `--bundles dmg` 后会把 bundle/macos/*.app 清掉，
+          # 所以这里公证 **dmg 本身**（Apple 支持，也是标准做法）。
+          DMG=$(ls src-tauri/target/release/bundle/dmg/*.dmg | head -1)
+          echo "公证 dmg: $DMG"
+          xcrun notarytool submit "$DMG" \
             --apple-id "$APPLE_ID" --password "$APPLE_APP_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" --wait
-          xcrun stapler staple "$APP"
-          xcrun stapler validate "$APP"
+          xcrun stapler staple "$DMG"
+          xcrun stapler validate "$DMG"
+          echo "公证 + stapling 完成"
+          # 复核：dmg 里的 app 应是 Developer ID 签名
+          codesign -dv --verbose=2 /Volumes/DeskCap*/DeskCap.app 2>/dev/null | grep Authority | head -2 || true
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
