@@ -1,0 +1,44 @@
+[package]
+name = "deskcap"
+version = "1.0.0"
+license = "MIT"
+description = "DeskCap — 本机键鼠/打字采集与智能体知识沉淀工具"
+authors = ["DeskCap"]
+edition = "2021"
+
+[lib]
+name = "deskcap_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2.12", features = ["tray-icon", "image-png"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+active-win-pos-rs = "0.11"
+xcap = "0.9"
+axum = "0.8"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "net", "time", "fs", "io-util"] }
+parking_lot = "0.12"
+dirs = "6"
+chrono = { version = "0.4", features = ["serde", "clock"] }
+anyhow = "1"
+thiserror = "2"
+uuid = { version = "1", features = ["v4"] }
+tauri-plugin-autostart = "2"
+tauri-plugin-single-instance = "2"
+arboard = "3"
+regex = "1"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+libc = "0.2"
+objc2 = { version = "0.6", features = ["exception"] }
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+[target.'cfg(windows)'.dependencies]
+uiautomation = "0.24"
+
+[target.'cfg(all(not(target_os = "macos"), not(windows)))'.dependencies]
+rdev = "0.5"

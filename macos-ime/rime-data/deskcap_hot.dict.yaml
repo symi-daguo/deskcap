@@ -1,0 +1,96 @@
+# encoding: utf-8
+# 网络/常用热词 — 简拼 wm / xswl 等也可命中（配合 speller abbreviation）
+---
+name: deskcap_hot
+version: "2026.09"
+sort: by_weight
+...
+
+我们	wm	2000
+我们	women	1800
+正确	zhengque	2500
+正确	zhenque	2400
+正确	zhenqgue	2500
+正确	zhgque	2000
+好的	hd	1500
+好的	haode	1400
+收到	sd	1500
+收到	shoudao	1400
+谢谢	xx	1500
+谢谢	xiexie	1400
+哈哈	hh	1200
+哈哈	haha	1100
+可以	ky	1200
+可以	keyi	1100
+没问题	mwt	1200
+没问题	meiwenti	1100
+稍等	sd	900
+马上	ms	1000
+马上	mashang	900
+知道	zd	1000
+知道	zhidao	900
+感觉	gj	900
+感觉	ganjue	800
+笑死我了	xswl	1500
+笑死我了	xiaosiwole	1400
+yyds	yyds	1500
+永远的神	yyds	1400
+绝绝子	jjz	1200
+破防了	pfl	1200
+拿捏	nn	1000
+下头	xt	900
+上头	st	900
+家人们	jmr	1000
+咱就是说	zjss	1000
+有一说一	yysy	1000
+蚌埠住了	bbzl	1000
+老铁	lt	900
+兄弟们	xdm	1000
+打工人	dgr	1000
+干饭	gf	900
+内卷	nj	1000
+躺平	tp	1000
+摸鱼	my	1000
+对齐	dq	900
+拉通	lt	800
+闭环	bh	800
+赋能	fn	800
+抓手	zs	800
+颗粒度	kld	800
+复盘	fp	900
+落地	ld	900
+同步	tb	900
+拉齐	lq	800
+对焦	dj	800
+# 0.6.39 扩充：网络流行语 / 短句 / 常用口头禅
+摆烂	bl	1000
+躺平	tp	1000
+内卷	nj	1000
+emo	emo	1200
+666	666	1200
+233	233	1200
+awsl	awsl	1100
+tql	tql	1100
+yygq	yygq	1100
+yyds	yyds	1300
+永远的神	yyds	1200
+凡尔赛	fes	1000
+显眼包	xyb	1000
+废话文学	fhwx	1000
+社交nb症	shenbzh	900
+蚌埠住了	bbzl	1100
+默默	mm	1000
+求求	qq	1000
+好吧	hb	1100
+行吧	xb	900
+算了	sl	1000
+真香	zx	1100
+好家伙	hjh	1000
+我裂开	wlk	1000
+无语子	wuz	900
+破大防	pdf	1000
+nbcs	nbcs	900
+nsdd	nsdd	900
+OK	ok	1200
+Hi	hi	1000
+bye	bye	1000

@@ -1,0 +1,149 @@
+# DeskCap拼音 — luna + 简体 + 官方模糊/简拼模板 + 全角标点
+# encoding: utf-8
+#
+# 0.6.39: 模糊音/简拼/纠错全部走 librime 上游 pinyin.yaml 模板（__patch）。
+# 不再手写 derive/abbrev 规则，避免与上游漂移，也避免自己造轮子。
+# （librime quirk: algebra 是 map，__append 不能直接当 sibling；本地规则应作为
+# 另一个 patch ref 引入。本轮发现上游 key_correction 已覆盖常见手滑，
+# 故无需本地特例块。）
+
+schema:
+  schema_id: deskcap_pinyin
+  name: DeskCap拼音
+  version: "0.6"
+  author:
+    - DeskCap
+
+switches:
+  - name: ascii_mode
+    reset: 0
+    states: [ 中文, 西文 ]
+  - options: [ zh_hans ]
+    reset: 0
+    states: [ 简体 ]
+
+engine:
+  processors:
+    - ascii_composer
+    - recognizer
+    - key_binder
+    - speller
+    - punctuator
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - abc_segmentor
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - punct_translator
+    - script_translator
+  filters:
+    - simplifier@zh_hans
+    - uniquifier
+
+speller:
+  alphabet: zyxwvutsrqponmlkjihgfedcba
+  delimiter: " '"
+  algebra:
+    # 模糊音 / 简拼 / 拼写 / 纠错 — 全部走 librime 上游 pinyin.yaml 模板。
+    # 涵盖（截至 librime 1.17）：zh/ch/sh ↔ z/c/s, n ↔ l, r ↔ l（部分方言）,
+    # ren ↔ yin, hu ↔ fu, en ↔ eng, in ↔ ing, ian ↔ iang, uan ↔ uang,
+    # 简拼（首字母 + zh/ch/sh）, nüe ↔ nue, ju ↔ jü, gun ↔ guen, hui ↔ fei,
+    # 手滑 ngn → ng, zhonguo → zhong guo 等
+    __patch:
+      - pinyin:/zh_z_bufen
+      - pinyin:/n_l_bufen
+      - pinyin:/r_l_bufen
+      - pinyin:/r_y_bufen
+      - pinyin:/hu_f_buhun
+      - pinyin:/en_eng_bufen
+      - pinyin:/eng_ong_bufen
+      - pinyin:/abbreviation
+      - pinyin:/spelling_correction
+      - pinyin:/key_correction
+
+translator:
+  dictionary: luna_pinyin
+  prism: deskcap_pinyin
+  enable_user_dict: true
+  enable_sentence: true
+  enable_completion: true
+  initial_quality: 1.2
+  preedit_format:
+    - xform/([nl])v/$1ü/
+    - xform/([nl])ue/$1üe/
+    - xform/([jqxy])v/$1u/
+
+# 网络/职场热词：简拼或全拼都能出，权重高于系统词
+hot:
+  dictionary: deskcap_hot
+  enable_user_dict: false
+  enable_completion: true
+  initial_quality: 20
+
+zh_hans:
+  option_name: zh_hans
+  opencc_config: t2s.json
+  tips: none
+
+punctuator:
+  half_shape:
+    # 数组 = 出候选（可选半角/全角），不必切中英
+    '.': ["。", "．", "｡", "."]
+    '>': ["。", "．", "｡", "."]
+    ',': ["，", "、", ","]
+    '<': ["，", "、", "《", ","]
+    '?': ["？", "?"]
+    '!': ["！", "!"]
+    ':': ["：", ":"]
+    ';': ["；", ";"]
+    '(': ["（", "("]
+    ')': ["）", ")"]
+    '-': ["－", "-"]
+    '_': ["——", "_"]
+    '"': ["“", "\"", "”"]
+    "'": ["‘", "'", "’"]
+    '\\': ["、", "\\"]
+    '`': ["｀", "`"]
+    '/': ["、", "/", "／"]
+    '~': ["～", "~"]
+    '@': ["＠", "@"]
+    '#': ["＃", "#"]
+    '$': ["￥", "$"]
+    '%': ["％", "%"]
+    '^': ["……", "^"]
+    '&': ["＆", "&"]
+    '*': ["＊", "*", "·"]
+    '+': ["＋", "+"]
+    '=': ["＝", "="]
+    '|': ["｜", "|", "·"]
+    '[': ["「", "【", "["]
+    ']': ["」", "】", "]"]
+    '{': ["『", "｛", "{"]
+    '}': ["』", "｝", "}"]
+  full_shape:
+    __include: punctuation:/full_shape
+
+recognizer:
+  patterns:
+    uppercase: ''
+
+ascii_composer:
+  good_old_caps_lock: false
+  switch_key:
+    Caps_Lock: noop
+    Shift_L: noop
+    Shift_R: noop
+    Control_L: noop
+    Control_R: noop
+
+key_binder:
+  bindings:
+    __patch:
+      - key_bindings:/emacs_editing
+      - key_bindings:/paging_with_minus_equal
+      - key_bindings:/paging_with_comma_period

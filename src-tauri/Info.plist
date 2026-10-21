@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>NSAppleEventsUsageDescription</key>
+  <string>DeskCap needs accessibility access to capture keyboard and mouse for authorized office workflows.</string>
+  <key>NSAccessibilityUsageDescription</key>
+  <string>DeskCap uses Accessibility to read focused text when keyboard EventTap cannot deliver IME/Electron key events.</string>
+  <key>NSScreenCaptureUsageDescription</key>
+  <string>DeskCap captures your screen at intervals so office AI agents can understand your work context. Content may include all visible windows unless excluded apps are configured.</string>
+</dict>
+</plist>

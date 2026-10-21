@@ -1,0 +1,59 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+data
+src-tauri/target
+releases/*.exe
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Local icon experiments / backups
+*.bak
+*.bak-*
+**/*.png.bak
+**/*.png.bak-*
+
+# Installer binaries (build locally / copy via scripts)
+releases/*.exe
+releases/*.dmg
+releases/*.msi
+releases/*.app
+
+# Secrets / local runtime
+.env
+.env.*
+*.token
+**/agent.token
+
+# Scratch assets
+tmp-*
+
+macos-ime/build/
+macos-ime/rime-data/build/
+installation.yaml
+
+# Python
+__pycache__/
+*.pyc
+
+# IME 构建中间产物（不能入仓：37MB 且会被 LaunchServices 注册）
+macos-ime/.build-ime/

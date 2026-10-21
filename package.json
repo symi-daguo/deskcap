@@ -1,0 +1,39 @@
+{
+  "name": "deskcap",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "desktop": "tauri dev",
+    "check": "cargo check --manifest-path src-tauri/Cargo.toml"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.12.0",
+    "@tauri-apps/plugin-autostart": "2.5.1",
+    "date-fns": "^4.4.0",
+    "react": "^19.3.0",
+    "react-day-picker": "^10.0.2",
+    "react-dom": "^19.3.0",
+    "vis-data": "^8.0.5",
+    "vis-timeline": "^8.5.4"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.0",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^6.1.1",
+    "typescript": "~7.0.2",
+    "vite": "^8.3.1"
+  },
+  "license": "MIT",
+  "description": "DeskCap — 本机键鼠/打字采集与智能体知识沉淀工具（含 macOS 拼音输入法）",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/symi-daguo/deskcap.git"
+  },
+  "homepage": "https://github.com/symi-daguo/deskcap"
+}
