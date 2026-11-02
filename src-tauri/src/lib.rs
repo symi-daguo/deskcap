@@ -8,6 +8,7 @@ mod event;
 mod ime;
 mod ime_keepalive;
 mod logutil;
+mod meminfo;
 mod maintenance;
 mod netinfo;
 mod privacy;

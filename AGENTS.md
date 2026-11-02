@@ -34,7 +34,7 @@
 - **产品原则（2026-09）**：默认**不强制切换**客户输入法（习惯优先 → EventTap 拼音 + AX）；微信等要近 100% 汉字需用户切到 **DeskCap拼音**（已随包分发，非「后期再做」）。DeskCap.app `ime-list` 只维护启用列表，**不抢**当前输入源
 - **多端构建（CI，唯一构建入口）**：`.github/workflows/build.yml` — **macOS + Windows 两端**编译 + **上传安装包 artifact** + **打 tag `v*` 自动发 Release**。产物：macOS(dmg) / Windows(nsis) / IME(zip)。**Linux 不参与构建。**签名：默认 ad-hoc；配置 `APPLE_CERTIFICATE_P12` / `APPLE_ID` / `APPLE_TEAM_ID` / `APPLE_APP_PASSWORD` 四个 secrets 后自动走 Developer ID + 公证。**本地不再作为分发构建入口**（仅开发自测）。CI 首跑抓到过 Windows 端真编译 bug（`typing_buffer_snapshot` 从未实现）——`#[cfg(target_os)]` 分模块必须各平台真编译
 - **第三方许可**：见 `THIRD-PARTY-NOTICES.md` + `licenses/`。`luna_pinyin.*`/`pinyin.yaml`/`essay.txt`/`punctuation.yaml`/`symbols.yaml` 与派生文件 `deskcap_pinyin.schema.yaml` 为 **LGPL-3.0**；自建代码保持商业许可（rime 数据运行时加载，不静态嵌入）
-- **实测基线（2026-10-20）**：IME 37 MB / 常驻 21.6 MB（0.0% CPU）；DeskCap 15 MB / 66.5 MB（0.2% CPU）；`/ime/commit` 200 @4.5 ms，无 token/错 token 均 401
+- **实测基线（2026-11-02，1.0.1）**：DeskCap 独占物理 **86 MB**（峰值 112 MB，3h 不增长，CPU 0.2%）；IME 28 MB；`/ime/commit` 200 @4.5 ms，无 token/错 token 均 401。**`/status` 现已自报 `mem_mb` / `mem_peak_mb`**，口径同活动监视器；`vmmap` 的 RESIDENT 736MB 含共享系统库、VIRTUAL 393GB 是地址预留，都不是真实占用（详见 `docs/mac-ops.md` 内存口径章节）
 - Mac 安装：**`pnpm tauri build --bundles app && bash scripts/install-macos.sh`**（**优先 Developer ID**；**禁止** ad-hoc）。权限异常跑 **`bash scripts/fix-macos-tcc.sh`**。IME：`bash macos-ime/scripts/build-and-install.sh` → `notarize-ime.sh` → ditto 仅 `/Library/Input Methods`
 - 安全细则见 `SECURITY.md`（LAN HTTP + 防火墙）
 - Mac 运维/合规/IME/OTA：**唯一真源** `docs/mac-ops.md`（**验收先跑 `scripts/rime-type-test.sh`**）；根目录旧 `macos-ops.md` 已删

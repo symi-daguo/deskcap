@@ -1,6 +1,6 @@
 [package]
 name = "deskcap"
-version = "1.0.0"
+version = "1.0.1"
 license = "MIT"
 description = "DeskCap — 本机键鼠/打字采集与智能体知识沉淀工具"
 authors = ["DeskCap"]

@@ -58,6 +58,13 @@ pub struct SessionStatus {
     pub retention_days: u64,
     pub max_disk_mb: u64,
     pub sessions_bytes: u64,
+    /// 当前进程真实物理内存（MB）。macOS 取 ri_phys_footprint，
+    /// 与活动监视器「内存」列同口径；其他平台为 null。
+    #[serde(default)]
+    pub mem_mb: Option<u64>,
+    /// 进程生命周期内物理占用峰值（MB）。
+    #[serde(default)]
+    pub mem_peak_mb: Option<u64>,
     pub last_backup: Option<String>,
     /// macOS: Accessibility granted.
     pub accessibility_ok: bool,

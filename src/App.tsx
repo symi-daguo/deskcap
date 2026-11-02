@@ -25,6 +25,10 @@ type SessionStatus = {
   local_only?: boolean;
   lan_access?: boolean;
   sessions_bytes: number;
+  /** 进程真实物理内存（MB），macOS 与活动监视器同口径；其他平台为 null */
+  mem_mb?: number | null;
+  /** 物理占用峰值（MB） */
+  mem_peak_mb?: number | null;
   segment_path?: string;
   accessibility_ok?: boolean;
   input_monitoring_ok?: boolean;
@@ -449,6 +453,7 @@ export default function App() {
           <em>
             · {formatElapsed(status.elapsed)} · 事件 {status.event_count} ·{" "}
             {formatBytes(status.sessions_bytes || 0)}
+            {typeof status.mem_mb === "number" ? ` · 内存 ${status.mem_mb}MB` : ""}
           </em>
         </span>
         <div className="spacer" />

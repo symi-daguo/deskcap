@@ -837,6 +837,8 @@ impl CaptureEngine {
             retention_days: cfg.retention_days,
             max_disk_mb: cfg.max_disk_mb,
             sessions_bytes: maint.as_ref().map(|m| m.sessions_bytes).unwrap_or(0),
+            mem_mb: crate::meminfo::phys_footprint_mb(),
+            mem_peak_mb: crate::meminfo::phys_footprint_peak_mb(),
             last_backup: maint.as_ref().and_then(|m| m.backup_path.clone()),
             accessibility_ok: {
                 #[cfg(target_os = "macos")]

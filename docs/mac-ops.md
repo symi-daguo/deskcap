@@ -175,3 +175,49 @@ ls -t ~/Library/Logs/DiagnosticReports/DeskCapIME-*.ips | head -3
 | IME CPU | **瞬时 0.0–0.5%**（`ps -o %cpu` 是生命周期平均，启动时摊入 rime 词典编译，会显示 10–20%，别被吓到） |
 | DeskCap 内存 | 60–110 MB |
 | DeskCap CPU | 0.2–1%（Vision OCR 首次初始化时会短暂升高） |
+
+
+---
+
+## 进程内存的三个口径（1.0.1 起自报）
+
+同一份 `DeskCap.app` 在不同工具里显示三个差很大的数字，都真实，只是口径不同：
+
+| 口径 | 1.0.1 实测 | 含义 |
+|---|---|---|
+| `ps -o rss` | **86 MB** | 独占物理页。活动监视器「内存」列显示的是这个 |
+| `vmmap --summary` 的 RESIDENT | **736 MB** | 含 mmap 的共享系统库（`__TEXT` 512MB 是 WebKit/系统框架，多进程共享）|
+| `vmmap` 的 VIRTUAL | **393 GB** | 虚拟地址空间预留，**不占物理**。所有 GUI 应用都这样 |
+
+**判断内存是否异常，看第一个**（独占物理）。86 MB 对 Tauri + WebKit 是这个栈的下限；
+Electron 做同样的事起步 300 MB+。
+
+### 进程自报字段（1.0.1）
+
+`GET /status` 新增两个字段，口径与活动监视器一致：
+
+```json
+{
+  "mem_mb": 86,
+  "mem_peak_mb": 112
+}
+```
+
+- macOS 取 `proc_pid_rusage(RUSAGE_INFO_V4)` 的 `ri_phys_footprint` / `ri_lifetime_max_phys_footprint`
+- Windows / Linux 返回 `null`（不猜、不编数字）
+- 工作台顶栏会显示「内存 86MB」，不用再开活动监视器
+
+### 长期运行基线（实测）
+
+2026-11-02，连续运行 3 小时 8 分：
+
+| 指标 | 值 |
+|---|---|
+| 独占物理 | 86 MB |
+| 峰值 | 112 MB |
+| 事件计数 | 970 |
+| 会话文件 | 1154 个 / 25 MB |
+| CPU | 0.2% |
+
+内存不随时间线性增长 —— 事件缓冲有上限（`recent_cap` 80 条），日账走 BufWriter 落盘，
+渲染层按页切片（`pageItems`），不存在无界累积。
