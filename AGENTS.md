@@ -13,7 +13,7 @@
 ## Capture notes
 
 - Day detail API = text only; UI timeline may still show clicks
-- Retention: `retention_days` + `max_disk_mb` on sessions **and** day JSONL
+- Retention: `retention_days` + `max_disk_mb` on sessions **and** day JSONL。**1.0.2 起后台自动跑**：启动 60s 后首次 + 每 6 小时一次（此前只挂前端按钮，不点就不清理，与承诺不符）；日志 grep `maintenance auto:`
 - macOS 菜单栏：**亖** title only；Windows 托盘：圆角 SYMI 图标（Linux 分支保留但未验证）
 - Token: `dc_` + UUID v4
 - Accessibility / TCC 引导仅 macOS；Windows 端 UI 隐藏（Linux 分支保留但未验证）
@@ -32,8 +32,9 @@
 - **已知崩溃（已修 1.0.15）**：2026-09-10 17:25 `deskcap-clipboard` 读剪贴板时 NSPasteboard ObjC 异常 → SIGABRT 整进程退出；现已 `@catch` 吞掉，不再拖垮采集
 - **日账/会话写盘**：JSONL 批量 flush（~0.4–0.5s）；停止采集 / 退出 / Agent 读当天前会 flush。import 前先 flush，避免丢缓冲。写失败打日志并重开 sink。读侧跳过坏行。`kill -9` 仍可能丢最后一批未 flush 行（设计取舍：不全量 fsync）
 - **产品原则（2026-09）**：默认**不强制切换**客户输入法（习惯优先 → EventTap 拼音 + AX）；微信等要近 100% 汉字需用户切到 **DeskCap拼音**（已随包分发，非「后期再做」）。DeskCap.app `ime-list` 只维护启用列表，**不抢**当前输入源
-- **多端构建（CI，唯一构建入口）**：`.github/workflows/build.yml` — **macOS + Windows 两端**编译 + **上传安装包 artifact** + **打 tag `v*` 自动发 Release**。产物：macOS(dmg) / Windows(nsis) / IME(zip)。**Linux 不参与构建。**签名：默认 ad-hoc；配置 `APPLE_CERTIFICATE_P12` / `APPLE_ID` / `APPLE_TEAM_ID` / `APPLE_APP_PASSWORD` 四个 secrets 后自动走 Developer ID + 公证。**本地不再作为分发构建入口**（仅开发自测）。CI 首跑抓到过 Windows 端真编译 bug（`typing_buffer_snapshot` 从未实现）——`#[cfg(target_os)]` 分模块必须各平台真编译
+- **多端构建（CI，唯一构建入口）**：`.github/workflows/build.yml` — **macOS + Windows 两端**编译 + **上传安装包 artifact** + **打 tag `v*` 自动发 Release**。产物：macOS(dmg) / Windows(nsis) / IME(zip)。**Linux 不参与构建。**签名：默认 ad-hoc；配置 **5 个** secrets（`APPLE_CERTIFICATE_P12` / `APPLE_CERTIFICATE_PASSWORD` / `APPLE_ID` / `APPLE_TEAM_ID` / `APPLE_APP_PASSWORD`）后自动走 Developer ID + 公证（已实测：dmg `stapler validate` 通过、Gatekeeper `Notarized Developer ID`）。**本地不再作为分发构建入口**（仅开发自测）。CI 首跑抓到过 Windows 端真编译 bug（`typing_buffer_snapshot` 从未实现）——`#[cfg(target_os)]` 分模块必须各平台真编译
 - **第三方许可**：见 `THIRD-PARTY-NOTICES.md` + `licenses/`。`luna_pinyin.*`/`pinyin.yaml`/`essay.txt`/`punctuation.yaml`/`symbols.yaml` 与派生文件 `deskcap_pinyin.schema.yaml` 为 **LGPL-3.0**；自建代码保持商业许可（rime 数据运行时加载，不静态嵌入）
+- **1.0.2 性能修复**：微信 AX 汉字恢复加**熔断** —— 单次 AX IPC 调用不可取消，微信 AX 服务无响应时一次卡 19.9 秒（本机日志 `stage=budget_exhausted ms=19937`、`lag input_worker` p99=3596ms/max=23283ms）。250ms 遍历预算管不了单次调用，故改为「慢一次就冷却 60 秒」，冷却期内退化为拼音 buffer（既有 best-effort 降级）。日志 grep `wechat ax_cooldown=`
 - **实测基线（2026-11-02，1.0.1）**：DeskCap 独占物理 **86 MB**（峰值 112 MB，3h 不增长，CPU 0.2%）；IME 28 MB；`/ime/commit` 200 @4.5 ms，无 token/错 token 均 401。**`/status` 现已自报 `mem_mb` / `mem_peak_mb`**，口径同活动监视器；`vmmap` 的 RESIDENT 736MB 含共享系统库、VIRTUAL 393GB 是地址预留，都不是真实占用（详见 `docs/mac-ops.md` 内存口径章节）
 - Mac 安装：**`pnpm tauri build --bundles app && bash scripts/install-macos.sh`**（**优先 Developer ID**；**禁止** ad-hoc）。权限异常跑 **`bash scripts/fix-macos-tcc.sh`**。IME：`bash macos-ime/scripts/build-and-install.sh` → `notarize-ime.sh` → ditto 仅 `/Library/Input Methods`
 - 安全细则见 `SECURITY.md`（LAN HTTP + 防火墙）

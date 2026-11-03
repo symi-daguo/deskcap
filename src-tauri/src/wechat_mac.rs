@@ -336,7 +336,45 @@ pub fn recover_chinese_on_send() -> Option<(String, &'static str)> {
 /// 本机实测 `deskcap.log` 出现 769 条 `WARN lag input_worker=`，峰值 17390ms。
 /// 这里加分段耗时打点，把「卡在哪一步」变成可 grep 的数字，
 /// 避免下次只能靠猜或靠整体 lag 反推。行为不变，只加日志。
+/// AX 熔断：上次 AX 调用耗时超过 1 秒 → 冷却 60 秒。
+///
+/// 1.0.2 修 —— `snapshot_committed_text` 里有 250ms 遍历预算，但**单次 AX IPC
+/// 调用不可取消**：微信的 AX 服务无响应时，一次调用就能卡住输入线程 19.9 秒
+/// （本机实测 `stage=budget_exhausted ms=19937`，日志里 p99=3596ms、max=23283ms）。
+/// 那个预算限的是「走多少个节点」，管不了单次调用本身。
+///
+/// 熔断后代价很小：冷却期内汉字恢复直接退化为拼音 buffer —— 这本来就是
+/// 既有设计里的 best-effort 降级路径（见 `accept_candidate` 的注释）。
+static AX_COOLDOWN_UNTIL_SECS: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+
+const AX_SLOW_MS: u128 = 1000;
+const AX_COOLDOWN_SECS: u64 = 60;
+
+fn now_secs() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
+}
+
 pub fn recover_chinese_before_send() -> Option<(String, &'static str)> {
+    use std::sync::atomic::Ordering;
+    let now = now_secs();
+    if now < AX_COOLDOWN_UNTIL_SECS.load(Ordering::Relaxed) {
+        return None;
+    }
+    let t0 = std::time::Instant::now();
+    let out = recover_chinese_before_send_inner();
+    let ms = t0.elapsed().as_millis();
+    if ms >= AX_SLOW_MS {
+        AX_COOLDOWN_UNTIL_SECS.store(now + AX_COOLDOWN_SECS, Ordering::Relaxed);
+        crate::logutil::warn(&format!("wechat ax_cooldown={AX_COOLDOWN_SECS}s last_ms={ms}"));
+    }
+    out
+}
+
+fn recover_chinese_before_send_inner() -> Option<(String, &'static str)> {
     let t_all = std::time::Instant::now();
     if let Some(t) = crate::ax_text::snapshot_committed_text(true) {
         if accept_candidate(&t) {

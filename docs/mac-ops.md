@@ -221,3 +221,52 @@ Electron 做同样的事起步 300 MB+。
 
 内存不随时间线性增长 —— 事件缓冲有上限（`recent_cap` 80 条），日账走 BufWriter 落盘，
 渲染层按页切片（`pageItems`），不存在无界累积。
+
+
+---
+
+## 后台维护与 AX 熔断（1.0.2）
+
+### 磁盘回收原来不会自动跑
+
+`run_maintenance`（按 `retention_days` 删旧 session、按 `max_disk_mb` 兜底）
+此前**只挂在前端「清理」按钮上** —— 用户不点，它就永远不跑。本机实测：
+14 天前的会话文件仍在（3 个），`deskcap.log` 里 0 条 maintenance 记录，
+与 `AGENTS.md` 承诺的「超限自动删」不符。
+
+1.0.2 起在 `setup` 里加后台线程：**启动 60 秒后跑一次，之后每 6 小时**。
+日志：
+
+```bash
+grep 'maintenance auto:' ~/Library/Application\ Support/DeskCap/logs/deskcap.log
+# maintenance auto: deleted_sessions=0 deleted_bytes=0 sessions_bytes=25100288 backup=Some("...")
+```
+
+### 微信 AX 汉字恢复的熔断
+
+`recover_chinese_before_send` 跑在 `input_worker` 上，是同步阻塞的。
+`snapshot_committed_text` 里有 250 ms 的**遍历预算**（`begin_ax_budget`），
+但**单次 AX IPC 调用不可取消** —— 微信的 AX 服务无响应时，一次调用就卡住
+输入线程 19.9 秒：
+
+```
+stage=budget_exhausted ms=19937     ← 250ms 预算在调用之后才检查
+lag input_worker: p50=253ms p90=732ms p99=3596ms max=23283ms
+```
+
+1.0.2 加熔断：**单次超过 1 秒就冷却 60 秒**，冷却期内直接返回 `None`
+（退化为拼音 buffer，这是既有 best-effort 设计里允许的降级）。
+
+```bash
+grep 'ax_cooldown' ~/Library/Application\ Support/DeskCap/logs/deskcap.log
+# wechat ax_cooldown=60s last_ms=19937
+```
+
+### 判断输入线程是否健康
+
+```bash
+# lag 分布（p50 应 < 300ms，p99 不该上千）
+grep -oE 'lag input_worker=[0-9]+ms' .../deskcap.log \
+  | grep -oE '[0-9]+' | sort -n \
+  | awk '{a[NR]=$1} END {printf "n=%d p50=%d p90=%d p99=%d max=%d\n", NR, a[int(NR*.5)], a[int(NR*.9)], a[int(NR*.99)], a[NR]}'
+```

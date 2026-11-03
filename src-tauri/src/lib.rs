@@ -292,6 +292,27 @@ pub fn run() {
                 api::serve(engine).await;
             });
 
+            // 后台维护：启动 60 秒后跑一次，之后每 6 小时。
+            //
+            // 1.0.2 修 —— 此前 `run_maintenance` 只挂在前端「清理」按钮上，
+            // 没人点就永远不跑：`retention_days=14` / `max_disk_mb=1024` 形同虚设，
+            // 长期运行磁盘只增不减，与 AGENTS.md 承诺的「超限自动删」不符。
+            // 本机实测：14 天前的会话文件仍在（3 个），日志里 0 条 maintenance 记录。
+            {
+                let eng = Arc::clone(&engine_for_setup);
+                std::thread::spawn(move || {
+                    std::thread::sleep(std::time::Duration::from_secs(60));
+                    loop {
+                        let r = eng.run_maintenance_now();
+                        crate::logutil::info(&format!(
+                            "maintenance auto: deleted_sessions={} deleted_bytes={} sessions_bytes={} backup={:?}",
+                            r.deleted_sessions, r.deleted_bytes, r.sessions_bytes, r.backup_path
+                        ));
+                        std::thread::sleep(std::time::Duration::from_secs(6 * 3600));
+                    }
+                });
+            }
+
             // Tray: macOS = **one** thin「亖」template glyph (no title).
             // title + empty icon reserved an extra slot to the left of the text.
             let show_i = MenuItem::with_id(app, "show", "打开工作台", true, None::<&str>)?;

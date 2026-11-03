@@ -57,3 +57,11 @@ __pycache__/
 
 # IME 构建中间产物（不能入仓：37MB 且会被 LaunchServices 注册）
 macos-ime/.build-ime/
+
+# Tauri icon 生成的多平台产物：本项目只发 macOS(dmg) + Windows(nsis)，
+# iOS / Android / Microsoft Store 图标用不到。`pnpm tauri icon` 会重新生成，
+# 但不该进版本库（bundle.icon 只引用 32/128/128@2x/icns/ico 五个）。
+src-tauri/icons/ios/
+src-tauri/icons/android/
+src-tauri/icons/Square*.png
+src-tauri/icons/StoreLogo.png
